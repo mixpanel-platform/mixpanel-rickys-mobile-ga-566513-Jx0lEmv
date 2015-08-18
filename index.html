@@ -1,15 +1,52 @@
-<!DOCTYPE html>
+<!-- http://localhost:8000/index.html?api_key=38c148dea80e5275078afc8d3ed8db10&api_secret=bf7a39e99c9d0a006e112693736a3e20 -->
+<!doctype html>
 <html>
   <head>
-    <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
   </head>
   <body class="mixpanel-platform-body">
-    <h1>Hello, World!</h1>
     <script>
-      // Run queries and display results here
+      var start_date = moment().subtract(30, 'days');
+      var to_date = moment();
+      var length = 30;
+      var event1 = 'App Open';
+      var event2 = 'Game Played';
+      var limit = 10;
+      
+      var prop_params = {
+      	limit: limit
+      };
+      
+      MP.api.propertyValues(event1, '$os', prop_params).done(function(res) {
+      	properties = res.json;
+      	
+      	_.each(properties, function(prop) {
+      		where_exp = 'properties["$os"] == "'.concat(prop).concat('"');
+      		
+      		funnel_params = {
+      			from: start_date,
+      			to: to_date,
+      			length: length,
+      			where: where_exp,
+      		  segment: "mp_country_code"
+      		};
+      		
+      		MP.api.funnel(event1, event2, funnel_params).done(function(result) {
+      			console.log(prop);
+      			console.log(result);
+      			numerator = 0;
+      			denominator = 0;
+      			_.each(result['$overall'], function(res) {
+      			    numerator += res[1].count;
+      			    denominator += res[0].count;
+      			});
+      			conversion_rate = numerator / denominator;
+      			//console.log(conversion_rate);
+      		});
+      	});
+      });  
     </script>
   </body>
 </html>
